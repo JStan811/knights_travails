@@ -5,7 +5,8 @@ module KnightsTravails
   # a given starting position
   class DataStructure
     def initialize(root_cell)
-      @root_cell = build_structure(root_cell)
+      @root_cell = root_cell
+      @structure = build_structure(root_cell)
     end
 
     attr_reader :root_cell, :structure
@@ -24,24 +25,29 @@ module KnightsTravails
     private
 
     # rubocop: disable Metrics
-    def build_structure(root)
-      # may need some kind of queueing so the recursion stops after all
-      # children of one node, then goes back a level to do the next node at
-      # that level
+    def build_structure(root, queue = [])
+      # it would be faster to perform the search and the build at the same
+      # time since once the shortest path is found there's no reason to keep
+      # building. But by separating them it may quicken performing a
+      # second search with a different target
 
-      # Find all possible destination from root
-      # then, add destination as child of that child unless the destination
+      return root if root.nil?
+
+      # Find all possible destinations from root
+      # then, add destination as child unless the destination
       # already exists in the structure
       all_possible_destination_cells(root).each do |dest|
-        root.children << dest unless level_order(root).include?(dest.position)
+        root.children << dest unless level_order(@root_cell).include?(dest.position)
       end
 
-      root.children.each do |child|
-        all_possible_destination_cells(child).each do |dest|
-          child.children << dest unless level_order(root).include?(dest.position)
-        end
-      end
-      root
+      # use queue to ensure the structure is built one level at a time
+      # in a way, I'm building this breadth-first instead of depth-first
+      # this is so the branches always represent the shortest path to a node
+      # from the root
+      queue << root.children unless root.children.nil?
+      queue.flatten!
+      root = queue.shift
+      build_structure(root, queue)
     end
     # rubocop: enable Metrics
 
@@ -58,7 +64,7 @@ module KnightsTravails
       possible_moves << Cell.new([x - 1, y + 2]) if valid_position?(x - 1, y + 2)
       possible_moves << Cell.new([x - 2, y + 1]) if valid_position?(x - 2, y + 1)
       possible_moves << Cell.new([x - 2, y - 1]) if valid_position?(x - 2, y - 1)
-      possible_moves << Cell.new([x - 1, y - 2]) if valid_position?(x - 2, y - 2)
+      possible_moves << Cell.new([x - 1, y - 2]) if valid_position?(x - 1, y - 2)
       possible_moves
     end
     # rubocop: enable Metrics
