@@ -6,10 +6,46 @@ module KnightsTravails
   class DataStructure
     def initialize(root_cell)
       @root_cell = root_cell
-      @structure = build_structure(root_cell)
+      build_structure(root_cell)
     end
 
-    attr_reader :root_cell, :structure
+    attr_reader :root_cell
+
+    # rubocop: disable Metrics
+    def knight_moves(target_cell, root = @root_cell, path = [], target_found = false)
+      # guard clause in case target is initial cell
+      if @root_cell.position == target_cell.position
+        puts "You're already here!"
+        return
+      end
+
+      # base case
+      if root.position == target_cell.position
+        target_found = true
+        path << root.position
+        puts "You made it in #{path.length - 1} moves!"
+        puts 'Path taken:'
+        path.each { |position| puts " -> #{position}" }
+        return
+      end
+
+      path << root.position
+
+      unless root.children.empty?
+        root.children.each do |child|
+          break if target_found == true
+          
+          knight_moves(target_cell, child, path, target_found)
+        end
+      end
+
+      # remove cell from path array if it is a leaf and not the target
+      # before going back up a level
+      path.pop
+    end
+    # rubocop: enable Metrics
+
+    private
 
     def level_order(root = @root_cell, result_array = [], queue = [])
       # base case
@@ -22,9 +58,6 @@ module KnightsTravails
       level_order(root, result_array, queue)
     end
 
-    private
-
-    # rubocop: disable Metrics
     def build_structure(root, queue = [])
       # it would be faster to perform the search and the build at the same
       # time since once the shortest path is found there's no reason to keep
@@ -49,7 +82,6 @@ module KnightsTravails
       root = queue.shift
       build_structure(root, queue)
     end
-    # rubocop: enable Metrics
 
     # rubocop: disable Metrics
     def all_possible_destination_cells(root_cell)
